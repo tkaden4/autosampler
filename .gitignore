@@ -1,0 +1,7 @@
+/build/
+/bin/
+.gradle
+*.wav
+*.flac
+*.dspreset
+*.aiff

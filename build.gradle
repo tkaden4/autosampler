@@ -1,0 +1,19 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.8.10' 
+    id 'application' 
+}
+
+group = "io.github.tkaden4"
+version = "1.0"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.google.guava:guava:31.1-jre' 
+}
+
+application {
+    mainClass = "Main"
+}
