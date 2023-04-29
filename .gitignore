@@ -5,3 +5,4 @@
 *.flac
 *.dspreset
 *.aiff
+/samples/
