@@ -1,10 +1,22 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.8.10' 
-    id 'application' 
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
 }
 
 group = "io.github.tkaden4"
 version = "1.0"
+
+javafx {
+    version = "20"
+    modules = ["javafx.web", "javafx.controls", "javafx.fxml"]
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 
 repositories {
     mavenCentral()
@@ -16,4 +28,8 @@ dependencies {
 
 application {
     mainClass = "Main"
+}
+
+run {
+    standardInput = System.in
 }

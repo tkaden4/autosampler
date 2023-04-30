@@ -6,11 +6,28 @@ import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+import java.util.logging.Logger;
+
+import javax.sound.midi.MidiDevice;
+import javax.sound.sampled.Mixer;
 
 public class Sampler {
-  private SamplerOptions options;
 
-  public Sampler(SamplerOptions _options) {
+  public static class Options {
+    public MidiDevice.Info midiDevice;
+    public Mixer.Info audioDevice;
+    public Logger logger;
+
+    public Options(MidiDevice.Info midiDevice, Mixer.Info audioDevice, Logger logger) {
+      this.midiDevice = midiDevice;
+      this.audioDevice = audioDevice;
+      this.logger = logger;
+    }
+  }
+
+  private Options options;
+
+  public Sampler(Options _options) {
     this.options = _options;
   }
 
