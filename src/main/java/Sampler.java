@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.nio.file.Path;
+
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.ShortMessage;
 import javax.sound.sampled.AudioFileFormat;
@@ -28,8 +29,6 @@ public class Sampler {
     this.options = _options;
   }
 
-  // TODO should this be choosable by the user?
-  // and should it be automatically derived from the audio device?
   private static AudioFormat getAudioFormat() {
     return new AudioFormat(44100, 16, 1, true, false);
   }
@@ -53,14 +52,12 @@ public class Sampler {
     var inputStream = new AudioInputStream(line);
 
     // We have to record on a separate thread
-    var thread = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          AudioSystem.write(inputStream, AudioFileFormat.Type.WAVE, outputFile);
-        } catch (IOException e) {
-          System.out.println(e);
-        }
+    var thread = new Thread(() -> {
+      try {
+        AudioSystem.write(inputStream, AudioFileFormat.Type.WAVE, outputFile);
+      } catch (IOException e) {
+        // TODO handle this better
+        System.out.println(e);
       }
     });
     thread.start();
@@ -75,11 +72,11 @@ public class Sampler {
     message.setMessage(ShortMessage.NOTE_OFF, 0, note, velocity);
     midiDevice.getReceiver().send(message, timeStamp);
     Thread.sleep(duration - sustain);
-    // Try to send the "all sound off" command
-    // var offMessage = new SysexMessage(120, new byte[] {}, 0);
-    // midiDevice.getReceiver().send(offMessage, timeStamp);
+    // TODO wait for the sample to reach zero volume before returning, otherwise it
+    // bleeds into the next sample
 
     midiDevice.close();
+
     line.stop();
     line.close();
     thread.interrupt();

@@ -1,23 +1,27 @@
 import java.io.File;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
 import javax.sound.midi.MidiDevice;
-import javax.sound.midi.MidiSystem;
-import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Mixer;
 import jfxtras.styles.jmetro.*;
 import kotlin.Unit;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
@@ -30,16 +34,16 @@ public class AutoSamplerApplication extends Application {
 
   private ChoiceBox<Mixer.Info> audioDeviceChoice;
   private ChoiceBox<MidiDevice.Info> midiDeviceChoice;
-  private Text outputDirectoryText;
-  private File outputDirectory = Util.cwd().toFile();
+  private File outputDirectory = Util.cwd().resolve("samples").toFile();
   private Text resultText;
+  private Canvas piano;
 
   static void run(String[] args) {
     launch(args);
   }
 
   private AutoSampler.Options getOptionsFromState() {
-    return new AutoSampler.Options(60, 72, 1000, 100, this.outputDirectory.toPath(),
+    return new AutoSampler.Options(60, 71, 2000, 1000, this.outputDirectory.toPath(),
         (note, velocity) -> "sample_" + note + "_" + velocity + ".wav", this.audioDeviceChoice.getValue(),
         this.midiDeviceChoice.getValue());
   }
@@ -71,48 +75,89 @@ public class AutoSamplerApplication extends Application {
     // Choice of output directory
     var directoryChooser = new DirectoryChooser();
     directoryChooser.setInitialDirectory(Util.cwd().toFile());
-    var directoryChooserOpenButton = new Button("Choose Output");
-    directoryChooserOpenButton.setOnAction(_e -> {
-      this.outputDirectory = directoryChooser.showDialog(primaryStage);
-      this.outputDirectoryText.setText(this.outputDirectory.getPath().toString());
+    var directoryChooserTextField = new TextField(this.outputDirectory.toPath().toString());
+    var directoryChooserButton = new Button("...");
+    directoryChooserButton.setOnMouseClicked(e -> {
+      var chosen = directoryChooser.showDialog(primaryStage);
+      if (chosen == null) {
+        return;
+      }
+      this.outputDirectory = chosen;
+      directoryChooserTextField.setText(this.outputDirectory.getPath().toString());
     });
-    this.outputDirectoryText = new Text(this.outputDirectory.toPath().toString());
 
     // Start button + progress
     var outputText = new Text();
     this.resultText = outputText;
     var sampleButton = new Button("Start Sampling");
     var progress = new ProgressBar(0);
-    // TODO this needs to be run on a separate thread
+    var options = this.getOptionsFromState();
+    var estimateText = new Text(
+        Util.formatDuration(Duration.ofMillis(options.sampleLength * (options.endNote - options.startNote + 1))));
+
     sampleButton.setOnAction(_e -> {
       this.resultText.setText("");
       progress.setProgress(0);
       System.out.println(this.outputDirectory.toPath().toString());
       System.out.println("Starting sampling");
-      try {
-        AutoSampler.sample(getOptionsFromState(), (note, velocity, current, total) -> {
-          System.out.printf("%d %d %d/%d\n", note, velocity, current, total);
-          progress.setProgress(((float) current) / ((float) total));
-          return Unit.INSTANCE;
+
+      sampleButton.setDisable(true);
+      var self = this;
+      var task = new Thread(() -> {
+        try {
+          AutoSampler.sample(getOptionsFromState(), (note, velocity, current, total) -> {
+            final double currentProgress = ((double) current) / ((double) total);
+            Platform.runLater(() -> {
+              System.out.printf("%d %d %d/%d\n", note, velocity, current, total);
+              progress.setProgress(currentProgress);
+            });
+            return Unit.INSTANCE;
+          });
+        } catch (Exception e) {
+          Platform.runLater(() -> {
+            self.resultText.setText(e.toString());
+          });
+        }
+        Platform.runLater(() -> {
+          sampleButton.setDisable(false);
         });
-      } catch (Exception e) {
-        this.resultText.setText(e.toString());
-      }
+      });
+
+      task.start();
     });
 
     // IO options
-    var ioOptionsBox = new HBox(5, this.midiDeviceChoice, this.audioDeviceChoice);
-    var directoryChoiceBox = new HBox(5, directoryChooserOpenButton, this.outputDirectoryText);
+    var ioOptionsBox = new HBox(5, this.midiDeviceChoice, this.audioDeviceChoice, directoryChooserTextField,
+        directoryChooserButton);
+    ioOptionsBox.getStyleClass().add(JMetroStyleClass.BACKGROUND);
+    HBox.setHgrow(this.midiDeviceChoice, Priority.ALWAYS);
+    HBox.setHgrow(this.audioDeviceChoice, Priority.ALWAYS);
+    HBox.setHgrow(directoryChooserTextField, Priority.ALWAYS);
+    HBox.setHgrow(directoryChooserTextField, Priority.ALWAYS);
 
-    var box = new VBox(10, ioOptionsBox, new Separator(Orientation.HORIZONTAL), directoryChoiceBox,
-        new Separator(Orientation.HORIZONTAL), sampleButton, progress, outputText);
+    //
+    var octaves = 7;
+    var width = Piano.width(octaves);
+    var pianoHeight = 100;
+    var height = 300 + pianoHeight;
+
+    // Layout
+    var utils = new VBox(10, ioOptionsBox, new Separator(Orientation.HORIZONTAL),
+        new HBox(5, sampleButton, estimateText), progress, outputText);
+    utils.setPadding(new Insets(10, 10, 10, 10));
+    utils.maxHeight(300);
+
+    // Piano
+    var p = Piano.create(width, pianoHeight, octaves);
+    this.piano = p;
+    var box = new VBox(this.piano, utils);
     box.getStyleClass().add(JMetroStyleClass.BACKGROUND);
-    box.setPadding(new Insets(10, 10, 10, 10));
 
-    var scene = new Scene(box, 800, 600);
-
+    // Scene
+    var scene = new Scene(box, width, height);
     var theme = new JMetro(Style.DARK);
     theme.setScene(scene);
+
     primaryStage.setScene(scene);
     primaryStage.show();
   }

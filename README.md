@@ -10,4 +10,5 @@ gradle run
 ## TODO
 ```
 - Input Gain Adjustment
+- Piano graphic
 ```
