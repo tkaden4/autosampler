@@ -1,6 +1,7 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.8.10' 
     id 'application'
+    id 'java'
     id 'org.openjfx.javafxplugin' version '0.0.13'
 }
 
@@ -23,13 +24,10 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.google.guava:guava:31.1-jre' 
+    implementation files('libs/jmetro-11.6.16.jar')
+    implementation 'com.google.guava:guava:31.1-jre'
 }
 
 application {
     mainClass = "Main"
-}
-
-run {
-    standardInput = System.in
 }

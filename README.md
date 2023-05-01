@@ -6,3 +6,8 @@
 gradle build
 gradle run
 ```
+
+## TODO
+```
+- Input Gain Adjustment
+```

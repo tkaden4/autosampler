@@ -1,3 +1,5 @@
+import java.util.stream.Stream;
+
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
@@ -33,5 +35,17 @@ public class SoundUtil {
       // TODO log or handle other way
       return false;
     }
+  }
+
+  static Mixer.Info[] audioInputs() {
+    return Stream.of(AudioSystem.getMixerInfo()).filter(x -> SoundUtil.hasTargetDataLines(x))
+        .toArray(s -> new Mixer.Info[s]);
+  }
+
+  static MidiDevice.Info[] midiOutputs() {
+    return Stream.of(MidiSystem.getMidiDeviceInfo()).filter(x -> {
+      return SoundUtil.hasMIDIOutput(x);
+    })
+        .toArray(s -> new MidiDevice.Info[s]);
   }
 }
