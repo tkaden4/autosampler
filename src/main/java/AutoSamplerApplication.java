@@ -138,7 +138,7 @@ public class AutoSamplerApplication extends Application {
     //
     var octaves = 7;
     var width = Piano.width(octaves);
-    var pianoHeight = 100;
+    var pianoHeight = Piano.height();
     var height = 300 + pianoHeight;
 
     // Layout
@@ -158,6 +158,7 @@ public class AutoSamplerApplication extends Application {
     var theme = new JMetro(Style.DARK);
     theme.setScene(scene);
 
+    primaryStage.setResizable(false);
     primaryStage.setScene(scene);
     primaryStage.show();
   }

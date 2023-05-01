@@ -4,14 +4,18 @@ import javafx.scene.paint.Color;
 public class Piano {
   static int WHITE_KEY_WIDTH = 20;
   static int WHITE_KEY_HEIGHT = 90;
-  static int BLACK_KEY_WIDTH = (int) (WHITE_KEY_WIDTH / 1.71);
+  static int BLACK_KEY_WIDTH = (int) (WHITE_KEY_WIDTH / 1.61);
   static int BLACK_KEY_HEIGHT = (int) (WHITE_KEY_HEIGHT / 1.61);
   static int MARGIN = 2;
   static int PADDING = 5;
   static int NUDGE = 1;
 
   static int width(int octaves) {
-    return PADDING + (octaves * 7) * (WHITE_KEY_WIDTH + MARGIN) + PADDING;
+    return PADDING + (octaves * 7) * (WHITE_KEY_WIDTH + MARGIN) + PADDING - MARGIN;
+  }
+
+  static int height() {
+    return PADDING + WHITE_KEY_HEIGHT + PADDING;
   }
 
   static Canvas create(int width, int height, int octaves) {
