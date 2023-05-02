@@ -71,21 +71,13 @@ public class Piano {
     return PADDING;
   }
 
-  private static boolean inBlackKey(int octave, int offset, int x, int y) {
-    var xPosition = blackKeyX(octave, offset);
-    var xPositionEnd = xPosition + BLACK_KEY_WIDTH;
-    var yPosition = blackKeyY(octave, offset);
-    var yPositionEnd = yPosition + BLACK_KEY_HEIGHT;
-
-    return (x >= xPosition && x <= xPositionEnd) && (y >= yPosition && y <= yPositionEnd);
-  }
-
-  private static boolean inWhiteKey(int key, int x, int y) {
-    var xPosition = whiteKeyX(key);
-    var xPositionEnd = xPosition + WHITE_KEY_WIDTH;
-    var yPosition = whiteKeyY(key);
-    var yPositionEnd = yPosition + WHITE_KEY_HEIGHT;
-
+  private static boolean inBounds(double x, double y, Key key) {
+    var width = key.type == Key.Type.BLACK ? BLACK_KEY_WIDTH : WHITE_KEY_WIDTH;
+    var height = key.type == Key.Type.BLACK ? BLACK_KEY_HEIGHT : WHITE_KEY_HEIGHT;
+    var xPosition = key.x;
+    var yPosition = key.y;
+    var xPositionEnd = xPosition + width;
+    var yPositionEnd = yPosition + height;
     return (x >= xPosition && x <= xPositionEnd) && (y >= yPosition && y <= yPositionEnd);
   }
 
@@ -120,6 +112,27 @@ public class Piano {
         ctx.setFill(key.pressed ? Color.valueOf(BLACK_KEY_PRESSED_COLOR) : Color.valueOf(BLACK_KEY_COLOR));
         ctx.fillRect(key.x, key.y, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT);
       }
+    }
+  }
+
+  private Key collision(double x, double y) {
+    Key result = null;
+    for (var key : this.keys) {
+      if (inBounds(x, y, key)) {
+        if (result != null && result.type == Key.Type.WHITE) {
+          return key;
+        }
+        result = key;
+      }
+    }
+    return result;
+  }
+
+  private void onMouseDown(double x, double y) {
+    var key = this.collision(x, y);
+    if (key != null) {
+      key.pressed = true;
+      this.draw();
     }
   }
 
