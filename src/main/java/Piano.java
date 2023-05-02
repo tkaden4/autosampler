@@ -40,7 +40,7 @@ public class Piano {
   private static String WHITE_KEY_PRESSED_COLOR = "#facacc";
   private static String BLACK_KEY_PRESSED_COLOR = "#8a0a0c";
 
-  private static String PIANO_BACKGROUND = "#1a1a1c";
+  private static String PIANO_BACKGROUND = "#0a0a0c";
 
   static double width(int octaves) {
     return PADDING + (octaves * 7) * (WHITE_KEY_WIDTH + MARGIN) + PADDING - MARGIN;

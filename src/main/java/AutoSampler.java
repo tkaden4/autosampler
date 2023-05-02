@@ -1,10 +1,6 @@
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import kotlin.Unit;
-import kotlin.jvm.functions.Function2;
-import kotlin.jvm.functions.Function4;
-
 import javax.sound.midi.MidiDevice;
 import javax.sound.sampled.Mixer;
 
@@ -33,7 +29,7 @@ public class AutoSampler {
     public Path outputDirectory;
 
     // (note, velocity) -> name
-    public Function2<Integer, Integer, String> namingConvention;
+    public NamingConvention namingConvention;
 
     // Audio Device
     public Mixer.Info audioDevice;
@@ -41,8 +37,12 @@ public class AutoSampler {
     // MIDI Device
     public MidiDevice.Info midiDevice;
 
+    public static interface NamingConvention {
+      String invoke(int note, int velocity);
+    }
+
     public Options(int startNote, int endNote, int sampleLength, int noteHoldDuration, Path outputDirectory,
-        Function2<Integer, Integer, String> namingConvention, Mixer.Info audioDevice, MidiDevice.Info midiDevice) {
+        NamingConvention namingConvention, Mixer.Info audioDevice, MidiDevice.Info midiDevice) {
       this.startNote = startNote;
       this.endNote = endNote;
       this.sampleLength = sampleLength;
@@ -54,8 +54,12 @@ public class AutoSampler {
     }
   }
 
+  public static interface SampleHandler {
+    void invoke(int a, int b, int c, int d);
+  }
+
   // options, (note, velocity, current, total) -> void
-  static void sample(Options options, Function4<Integer, Integer, Integer, Integer, Unit> onSample) throws Exception {
+  static void sample(Options options, SampleHandler onSample) throws Exception {
     var sampler = new Sampler(new Sampler.Options(options.midiDevice, options.audioDevice));
     for (int i = options.startNote; i <= options.endNote; ++i) {
       var path = Paths.get(options.outputDirectory.toString(), options.namingConvention.invoke(i, 127));
