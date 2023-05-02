@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Arrays;
@@ -36,7 +37,7 @@ public class AutoSamplerApplication extends Application {
   private ChoiceBox<MidiDevice.Info> midiDeviceChoice;
   private File outputDirectory = Util.cwd().resolve("samples").toFile();
   private Text resultText;
-  private Canvas piano;
+  private Piano piano;
 
   static void run(String[] args) {
     launch(args);
@@ -77,6 +78,14 @@ public class AutoSamplerApplication extends Application {
     directoryChooser.setInitialDirectory(Util.cwd().toFile());
     var directoryChooserTextField = new TextField(this.outputDirectory.toPath().toString());
     var directoryChooserButton = new Button("...");
+    var openDirectoryButton = new Button("View");
+    openDirectoryButton.setOnAction(e -> {
+      try {
+        Util.showPath(this.outputDirectory.toPath());
+      } catch (IOException e1) {
+        e1.printStackTrace();
+      }
+    });
     directoryChooserButton.setOnMouseClicked(e -> {
       var chosen = directoryChooser.showDialog(primaryStage);
       if (chosen == null) {
@@ -128,12 +137,13 @@ public class AutoSamplerApplication extends Application {
 
     // IO options
     var ioOptionsBox = new HBox(5, this.midiDeviceChoice, this.audioDeviceChoice, directoryChooserTextField,
-        directoryChooserButton);
+        directoryChooserButton, openDirectoryButton);
     ioOptionsBox.getStyleClass().add(JMetroStyleClass.BACKGROUND);
-    HBox.setHgrow(this.midiDeviceChoice, Priority.ALWAYS);
-    HBox.setHgrow(this.audioDeviceChoice, Priority.ALWAYS);
+    HBox.setHgrow(this.midiDeviceChoice, Priority.NEVER);
+    HBox.setHgrow(this.audioDeviceChoice, Priority.NEVER);
     HBox.setHgrow(directoryChooserTextField, Priority.ALWAYS);
-    HBox.setHgrow(directoryChooserTextField, Priority.ALWAYS);
+    HBox.setHgrow(directoryChooserButton, Priority.ALWAYS);
+    HBox.setHgrow(openDirectoryButton, Priority.ALWAYS);
 
     //
     var octaves = 7;
@@ -148,9 +158,9 @@ public class AutoSamplerApplication extends Application {
     utils.maxHeight(300);
 
     // Piano
-    var p = Piano.create(width, pianoHeight, octaves);
-    this.piano = p;
-    var box = new VBox(this.piano, utils);
+    this.piano = new Piano(width, pianoHeight, 7);
+    this.piano.draw();
+    var box = new VBox(this.piano.getCanvas(), utils);
     box.getStyleClass().add(JMetroStyleClass.BACKGROUND);
 
     // Scene

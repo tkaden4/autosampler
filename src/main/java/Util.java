@@ -1,6 +1,8 @@
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.awt.Desktop;
+import java.io.IOException;
 
 public class Util {
   static Path cwd() {
@@ -16,5 +18,9 @@ public class Util {
         (absSeconds % 3600) / 60,
         absSeconds % 60);
     return seconds < 0 ? "-" + positive : positive;
+  }
+
+  public static void showPath(Path path) throws IOException {
+    Desktop.getDesktop().open(path.toFile());
   }
 }
