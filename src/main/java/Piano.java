@@ -24,10 +24,11 @@ public class Piano {
     }
   }
 
+  private static double PHI = 1.61;
   private static double WHITE_KEY_WIDTH = 20;
-  private static double WHITE_KEY_HEIGHT = WHITE_KEY_WIDTH * 4.17;
-  private static double BLACK_KEY_WIDTH = (double) (WHITE_KEY_WIDTH / 1.61);
-  private static double BLACK_KEY_HEIGHT = (double) (WHITE_KEY_HEIGHT / 1.61);
+  private static double WHITE_KEY_HEIGHT = WHITE_KEY_WIDTH * PHI * PHI * PHI;
+  private static double BLACK_KEY_WIDTH = (double) (WHITE_KEY_WIDTH / PHI);
+  private static double BLACK_KEY_HEIGHT = (double) (WHITE_KEY_HEIGHT / PHI);
   private static double MARGIN = 2;
   private static double PADDING = 8;
   private static double NUDGE = 2;
