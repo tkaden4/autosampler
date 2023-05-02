@@ -11,4 +11,5 @@ gradle run
 ```
 - Input Gain Adjustment
 - Piano graphic
+- Sample length determined by zero crossing
 ```

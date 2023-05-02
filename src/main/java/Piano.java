@@ -1,5 +1,4 @@
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 public class Piano {
@@ -12,15 +11,17 @@ public class Piano {
     public boolean pressed;
     public Type type;
     public int number;
+    public int midiCode;
     public double x;
     public double y;
 
-    public Key(Type _type, int _number, boolean _pressed, double _x, double _y) {
+    public Key(Type _type, int _number, int _midi, boolean _pressed, double _x, double _y) {
       this.pressed = _pressed;
       this.number = _number;
       this.type = _type;
       this.x = _x;
       this.y = _y;
+      this.midiCode = _midi;
     }
   }
 
@@ -37,7 +38,7 @@ public class Piano {
   private static String BLACK_KEY_COLOR = "#0a0a0c";
 
   private static String WHITE_KEY_PRESSED_COLOR = "#facacc";
-  private static String BLACK_KEY_PRESSED_COLOR = "#5a0a0c";
+  private static String BLACK_KEY_PRESSED_COLOR = "#8a0a0c";
 
   private static String PIANO_BACKGROUND = "#1a1a1c";
 
@@ -143,14 +144,16 @@ public class Piano {
     this.width = _width;
     this.height = _height;
     this.canvas = new Canvas(_width, _height);
+    var startingNote = MIDIUtil.toMIDI("C1");
     for (int i = 0; i < _octaves; ++i) {
       for (int j = 0; j < 5; ++j) {
-        var number = i * 12 + BLACK_KEY_OFFSETS[j];
-        this.keys[number] = new Key(Key.Type.BLACK, number, false, blackKeyX(i, j), blackKeyY(i, j));
+        var noteIndex = i * 12 + BLACK_KEY_OFFSETS[j];
+        this.keys[noteIndex] = new Key(Key.Type.BLACK, noteIndex, startingNote + noteIndex, false, blackKeyX(i, j),
+            blackKeyY(i, j));
       }
       for (int j = 0; j < 7; ++j) {
-        var number = i * 12 + WHITE_KEY_OFFSETS[j];
-        this.keys[number] = new Key(Key.Type.WHITE, number, false, whiteKeyX(i * 7 + j),
+        var noteIndex = i * 12 + WHITE_KEY_OFFSETS[j];
+        this.keys[noteIndex] = new Key(Key.Type.WHITE, noteIndex, startingNote + noteIndex, false, whiteKeyX(i * 7 + j),
             whiteKeyY(i * 7 + j));
       }
     }
