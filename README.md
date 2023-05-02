@@ -1,4 +1,6 @@
-# autosampler
+# Auto Sampler
+
+![logo](https://raw.githubusercontent.com/tkaden4/autosampler/main/assets/logo512.png)
 
 
 ## Testing
