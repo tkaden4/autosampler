@@ -21,6 +21,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -52,6 +53,8 @@ public class AutoSamplerApplication extends Application {
   @Override
   public void start(Stage primaryStage) throws Exception {
     primaryStage.setTitle("Auto Sampler v0");
+    primaryStage.getIcons()
+        .add(new Image(AutoSamplerApplication.class.getResourceAsStream("/icon128.png")));
 
     this.audioDevices = SoundUtil.audioInputs();
     this.midiDevices = SoundUtil.midiOutputs();
@@ -160,6 +163,9 @@ public class AutoSamplerApplication extends Application {
     // Piano
     this.piano = new Piano(width, pianoHeight, 7);
     this.piano.draw();
+    for (int i = 0; i < 20; ++i) {
+      this.piano.onMouseDown(i * 42, 10);
+    }
     var box = new VBox(this.piano.getCanvas(), utils);
     box.getStyleClass().add(JMetroStyleClass.BACKGROUND);
 

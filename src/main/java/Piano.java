@@ -129,7 +129,7 @@ public class Piano {
     return result;
   }
 
-  private void onMouseDown(double x, double y) {
+  public void onMouseDown(double x, double y) {
     var key = this.collision(x, y);
     if (key != null) {
       key.pressed = true;
