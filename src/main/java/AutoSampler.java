@@ -1,5 +1,7 @@
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.sound.midi.MidiDevice;
 import javax.sound.sampled.Mixer;
@@ -60,16 +62,23 @@ public class AutoSampler {
   }
 
   public static interface SampleHandler {
-    void invoke(int a, int b, int c, int d);
+    void invoke(int note, int velocity, int current, int total);
   }
 
   // options, (note, velocity, current, total) -> void
   static void sample(Options options, SampleHandler onSample) throws Exception {
     var sampler = new Sampler(new Sampler.Options(options.midiDevice, options.audioDevice));
-    for (int i = options.startNote; i <= options.endNote; ++i) {
-      var path = Paths.get(options.outputDirectory.toString(), options.namingConvention.invoke(i, 127));
-      sampler.sample(i, 127, options.noteHoldDuration, options.sampleLength, path);
-      onSample.invoke(i, 127, 1 + i - options.startNote, 1 + (options.endNote - options.startNote));
+    var toSample = new HashSet<Integer>();
+    for (var i = options.startNote; i <= options.endNote; i += options.interval) {
+      toSample.add(i);
+    }
+    toSample.add(options.endNote);
+    for (var note : toSample) {
+      var path = Paths.get(options.outputDirectory.toString(), options.namingConvention.invoke(note, 127));
+      sampler.sample(note, 127, options.noteHoldDuration, options.sampleLength, path);
+      var current = 1 + note - options.startNote;
+      var total = 1 + (options.endNote - options.startNote);
+      onSample.invoke(note, 127, current, total);
     }
   }
 }

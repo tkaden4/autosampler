@@ -1,17 +1,22 @@
 # Auto Sampler
 
-![logo](https://raw.githubusercontent.com/tkaden4/autosampler/main/assets/logo256.png)
+![logo](https://raw.githubusercontent.com/tkaden4/autosampler/main/assets/screenshot.png)
 
 
 ## Testing
 ```bash
-gradle build
 gradle run
+```
+
+## Creating a JAR
+```bash
+gradle fatJar
+# result in ./build/libs/
 ```
 
 ## TODO
 ```
 - Input Gain Adjustment
-- Piano graphic
 - Sample length determined by zero crossing
+- Generate DecentSampler metadata
 ```

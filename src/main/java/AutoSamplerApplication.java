@@ -21,14 +21,18 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
-// TODO keep the visual state updated
 public class AutoSamplerApplication extends Application {
   private Mixer.Info[] audioDevices;
   private MidiDevice.Info[] midiDevices;
@@ -36,7 +40,6 @@ public class AutoSamplerApplication extends Application {
   private ChoiceBox<Mixer.Info> audioDeviceChoice;
   private ChoiceBox<MidiDevice.Info> midiDeviceChoice;
   private File outputDirectory = Util.cwd().resolve("samples").toFile();
-  private Text resultText;
   private Text estimateText;
   private Piano piano;
   private TextField sampleLengthField = new TextField("2000");
@@ -79,6 +82,9 @@ public class AutoSamplerApplication extends Application {
   private void updateEstimate() {
     var options = this.getOptionsFromState(true);
     if (options != null) {
+      if (options.interval <= 0) {
+        return;
+      }
       var distance = options.endNote - options.startNote;
       var extra = distance % options.interval;
       var totalNotes = extra > 0 ? (distance / options.interval + 2) : (distance / options.interval + 1);
@@ -90,6 +96,9 @@ public class AutoSamplerApplication extends Application {
   private void updatePianoState() {
     var options = this.getOptionsFromState(true);
     if (options != null) {
+      if (options.interval <= 0) {
+        return;
+      }
       this.piano.clear();
       for (var code = options.startNote; code <= options.endNote; code += options.interval) {
         this.piano.highlight(code);
@@ -148,15 +157,12 @@ public class AutoSamplerApplication extends Application {
     updateIOState();
 
     // Start button + progress
-    var outputText = new Text();
-    this.resultText = outputText;
     var sampleButton = new Button("Start Sampling");
     var progress = new ProgressBar(0);
     this.estimateText = new Text();
     updateEstimate();
 
     sampleButton.setOnAction(_e -> {
-      this.resultText.setText("");
       progress.setProgress(0);
 
       this.outputDirectory.mkdirs();
@@ -164,19 +170,16 @@ public class AutoSamplerApplication extends Application {
       System.out.println("Starting sampling");
 
       sampleButton.setDisable(true);
-      var self = this;
       var task = new Thread(() -> {
         try {
           AutoSampler.sample(getOptionsFromState(false), (note, velocity, current, total) -> {
-            final double currentProgress = ((double) current) / ((double) total);
             Platform.runLater(() -> {
-              System.out.printf("%d %d %d/%d\n", note, velocity, current, total);
-              progress.setProgress(currentProgress);
+              var message = String.format(" Sampling note %d with velocity %d", note, velocity);
+              System.out.println(message);
             });
           });
         } catch (Exception e) {
           Platform.runLater(() -> {
-            self.resultText.setText(e.toString());
           });
         }
         Platform.runLater(() -> {
@@ -239,13 +242,15 @@ public class AutoSamplerApplication extends Application {
     //
     var octaves = 7;
     var width = Piano.width(octaves);
+    var spacing = 5;
     var pianoHeight = Piano.height();
-    var height = 300 + pianoHeight;
+    var height = 100 + pianoHeight;
+    var padding = 10;
 
     // Layout
     var utils = new VBox(10, ioOptionsBox, new Separator(Orientation.HORIZONTAL), controlsBox,
         new Separator(Orientation.HORIZONTAL));
-    utils.setPadding(new Insets(10, 10, 10, 10));
+    utils.setPadding(new Insets(padding, padding, padding, padding));
     utils.maxHeight(300);
 
     // Piano
