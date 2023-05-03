@@ -188,7 +188,6 @@ public class AutoSamplerApplication extends Application {
     this.sampleLengthField = new TextField("1000");
 
     var sustainLabel = new Label("Note Sustain");
-    var sampleLengthLabel = new Label("Sample Length");
 
     var startingNoteLabel = new Label("Start");
     var endingNoteLabel = new Label("End");
@@ -212,7 +211,7 @@ public class AutoSamplerApplication extends Application {
     var controlsBox = new HBox(5, startingNoteLabel, this.startingNoteField, endingNoteLabel, this.endingNoteField,
         intervalLabel, this.intervalField,
         new Separator(Orientation.VERTICAL),
-        sustainLabel, this.noteHoldLengthField, sampleLengthLabel, this.sampleLengthField,
+        sustainLabel, this.noteHoldLengthField,
         new Separator(Orientation.VERTICAL),
         sampleButton);
     controlsBox.setAlignment(Pos.CENTER_LEFT);
