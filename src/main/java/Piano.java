@@ -95,6 +95,7 @@ public class Piano {
 
   public void draw() {
     var ctx = this.canvas.getGraphicsContext2D();
+    ctx.setImageSmoothing(false);
     ctx.setFill(Color.valueOf(PIANO_BACKGROUND));
     ctx.fillRect(0, 0, width, height);
 
