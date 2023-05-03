@@ -38,7 +38,8 @@ public class Piano {
   private static String BLACK_KEY_COLOR = "#0a0a0c";
 
   private static String WHITE_KEY_PRESSED_COLOR = "#facacc";
-  private static String BLACK_KEY_PRESSED_COLOR = "#8a0a0c";
+  private static String BLACK_KEY_PRESSED_COLOR = WHITE_KEY_PRESSED_COLOR;
+  // private static String BLACK_KEY_PRESSED_COLOR = "#8a0a0c";
 
   private static String PIANO_BACKGROUND = "#0a0a0c";
 
@@ -84,7 +85,6 @@ public class Piano {
   }
 
   private Key[] keys;
-  private int octaves;
   private Canvas canvas;
   private double width;
   private double height;
@@ -111,8 +111,12 @@ public class Piano {
     for (int i = 0; i < this.keys.length; ++i) {
       var key = this.keys[i];
       if (key.type == Key.Type.BLACK) {
-        ctx.setFill(key.pressed ? Color.valueOf(BLACK_KEY_PRESSED_COLOR) : Color.valueOf(BLACK_KEY_COLOR));
+        var keyColor = key.pressed ? Color.valueOf(BLACK_KEY_PRESSED_COLOR) : Color.valueOf(BLACK_KEY_COLOR);
+        ctx.setFill(Color.valueOf(PIANO_BACKGROUND));
         ctx.fillRect(key.x, key.y, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT);
+
+        ctx.setFill(keyColor);
+        ctx.fillRect(key.x + MARGIN, key.y, BLACK_KEY_WIDTH - MARGIN * 2, BLACK_KEY_HEIGHT - MARGIN);
       }
     }
   }
@@ -138,8 +142,23 @@ public class Piano {
     }
   }
 
+  public void highlight(int midiCode) {
+    for (var i = 0; i < this.keys.length; ++i) {
+      if (this.keys[i].midiCode == midiCode) {
+        this.keys[i].pressed = true;
+      }
+    }
+    this.draw();
+  }
+
+  public void clear() {
+    for (var i = 0; i < this.keys.length; ++i) {
+      this.keys[i].pressed = false;
+    }
+    this.draw();
+  }
+
   public Piano(double _width, double _height, int _octaves) {
-    this.octaves = _octaves;
     this.keys = new Key[_octaves * 12];
     this.width = _width;
     this.height = _height;

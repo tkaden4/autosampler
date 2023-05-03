@@ -1,18 +1,18 @@
 public class MIDIUtil {
 
   private static String[][] NOTES = new String[][] {
-      new String[] { "C", "B#" },
+      new String[] { "C" },
       new String[] { "Db", "C#" },
       new String[] { "D", },
       new String[] { "Eb", "D#" },
-      new String[] { "E", "Fb" },
-      new String[] { "F", "E#" },
+      new String[] { "E", },
+      new String[] { "F", },
       new String[] { "Gb", "F#" },
       new String[] { "G" },
       new String[] { "Ab", "G#" },
       new String[] { "A" },
       new String[] { "Bb", "A#" },
-      new String[] { "B", "Cb" },
+      new String[] { "B" },
   };
 
   public static int toMIDI(String note) {

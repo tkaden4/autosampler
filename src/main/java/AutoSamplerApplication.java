@@ -1,6 +1,5 @@
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -13,16 +12,13 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -31,6 +27,7 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
+// TODO keep the visual state updated
 public class AutoSamplerApplication extends Application {
   private Mixer.Info[] audioDevices;
   private MidiDevice.Info[] midiDevices;
@@ -45,20 +42,34 @@ public class AutoSamplerApplication extends Application {
   private Button openDirectoryButton;
   private TextField directoryChooserTextField;
 
+  private TextField startingNoteField = new TextField("C3");
+  private TextField endingNoteField = new TextField("C6");
+  private TextField intervalField = new TextField("6");
+
   static void run(String[] args) {
     launch(args);
   }
 
   private AutoSampler.Options getOptionsFromState() {
-    return new AutoSampler.Options(60, 71, Integer.parseInt(this.sampleLengthField.getText()),
+    return new AutoSampler.Options(MIDIUtil.toMIDI(this.startingNoteField.getText()),
+        MIDIUtil.toMIDI(this.endingNoteField.getText()),
+        Integer.parseInt(this.intervalField.getText()),
+        Integer.parseInt(this.sampleLengthField.getText()),
         Integer.parseInt(this.noteHoldLengthField.getText()), this.outputDirectory.toPath(),
         (note, velocity) -> "sample_" + note + "_" + velocity + ".wav", this.audioDeviceChoice.getValue(),
         this.midiDeviceChoice.getValue());
   }
 
-  private void updateState() {
+  private void updateIOState() {
     this.openDirectoryButton.setDisable(!this.outputDirectory.exists());
     this.directoryChooserTextField.setText(this.outputDirectory.getPath().toString());
+  }
+
+  private void updatePianoState() {
+    var options = this.getOptionsFromState();
+    for (var code = options.startNote; code <= options.endNote; code += options.interval) {
+      this.piano.highlight(code);
+    }
   }
 
   @Override
@@ -106,9 +117,9 @@ public class AutoSamplerApplication extends Application {
         return;
       }
       this.outputDirectory = chosen;
-      updateState();
+      updateIOState();
     });
-    updateState();
+    updateIOState();
 
     // Start button + progress
     var outputText = new Text();
@@ -145,7 +156,7 @@ public class AutoSamplerApplication extends Application {
         }
         Platform.runLater(() -> {
           sampleButton.setDisable(false);
-          updateState();
+          updateIOState();
         });
       });
 
@@ -156,28 +167,30 @@ public class AutoSamplerApplication extends Application {
     var ioOptionsBox = new HBox(5, this.midiDeviceChoice, this.audioDeviceChoice, directoryChooserTextField,
         directoryChooserButton, openDirectoryButton);
     ioOptionsBox.getStyleClass().add(JMetroStyleClass.BACKGROUND);
-    HBox.setHgrow(this.midiDeviceChoice, Priority.NEVER);
-    HBox.setHgrow(this.audioDeviceChoice, Priority.NEVER);
     HBox.setHgrow(directoryChooserTextField, Priority.ALWAYS);
-    HBox.setHgrow(directoryChooserButton, Priority.ALWAYS);
-    HBox.setHgrow(openDirectoryButton, Priority.ALWAYS);
 
     // Timing options and start
-    this.noteHoldLengthField = new TextField();
-    var noteHoldLengthConverter = new NumberStringFilteredConverter();
-    this.noteHoldLengthField
-        .setTextFormatter(new TextFormatter<>(noteHoldLengthConverter, 0, noteHoldLengthConverter.getFilter()));
-    this.noteHoldLengthField.setText("1000");
-
-    this.sampleLengthField = new TextField();
-    var sampleLengthConverter = new NumberStringFilteredConverter();
-    this.sampleLengthField
-        .setTextFormatter(new TextFormatter<>(sampleLengthConverter, 0, sampleLengthConverter.getFilter()));
-    this.sampleLengthField.setText("2000");
+    this.noteHoldLengthField = new TextField("1000");
+    this.sampleLengthField = new TextField("2000");
 
     var sustainLabel = new Label("Note Sustain");
     var sampleLengthLabel = new Label("Sample Length");
-    var controlsBox = new HBox(5, sustainLabel, this.noteHoldLengthField, sampleLengthLabel, this.sampleLengthField,
+
+    var startingNoteLabel = new Label("Start");
+    var endingNoteLabel = new Label("End");
+
+    var intervalLabel = new Label("Interval");
+
+    this.startingNoteField.setMaxWidth(60);
+    this.endingNoteField.setMaxWidth(60);
+    this.intervalField.setMaxWidth(60);
+    this.noteHoldLengthField.setMaxWidth(60);
+    this.sampleLengthField.setMaxWidth(60);
+
+    var controlsBox = new HBox(5, startingNoteLabel, this.startingNoteField, endingNoteLabel, this.endingNoteField,
+        intervalLabel, this.intervalField,
+        new Separator(Orientation.VERTICAL),
+        sustainLabel, this.noteHoldLengthField, sampleLengthLabel, this.sampleLengthField,
         new Separator(Orientation.VERTICAL),
         sampleButton, estimateText);
     controlsBox.setAlignment(Pos.CENTER_LEFT);
@@ -199,6 +212,8 @@ public class AutoSamplerApplication extends Application {
     this.piano.draw();
     var box = new VBox(this.piano.getCanvas(), utils);
     box.getStyleClass().add(JMetroStyleClass.BACKGROUND);
+
+    updatePianoState();
 
     // Scene
     var scene = new Scene(box, width, height);

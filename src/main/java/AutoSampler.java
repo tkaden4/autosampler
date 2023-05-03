@@ -19,6 +19,9 @@ public class AutoSampler {
     // Last MIDI note to sample
     public int endNote;
 
+    // Interval to sample between the notes
+    public int interval;
+
     // Length of time to sample (ms)
     public int sampleLength;
 
@@ -41,10 +44,12 @@ public class AutoSampler {
       String invoke(int note, int velocity);
     }
 
-    public Options(int startNote, int endNote, int sampleLength, int noteHoldDuration, Path outputDirectory,
+    public Options(int startNote, int endNote, int interval, int sampleLength, int noteHoldDuration,
+        Path outputDirectory,
         NamingConvention namingConvention, Mixer.Info audioDevice, MidiDevice.Info midiDevice) {
       this.startNote = startNote;
       this.endNote = endNote;
+      this.interval = interval;
       this.sampleLength = sampleLength;
       this.noteHoldDuration = noteHoldDuration;
       this.outputDirectory = outputDirectory;
