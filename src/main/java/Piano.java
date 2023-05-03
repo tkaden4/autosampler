@@ -1,5 +1,10 @@
 import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontSmoothingType;
+import javafx.scene.text.FontWeight;
 
 public class Piano {
   private static class Key {
@@ -31,8 +36,9 @@ public class Piano {
   private static double BLACK_KEY_WIDTH = (double) (WHITE_KEY_WIDTH / PHI);
   private static double BLACK_KEY_HEIGHT = (double) (WHITE_KEY_HEIGHT / PHI);
   private static double MARGIN = 2;
-  private static double PADDING = 8;
+  private static double PADDING = 24;
   private static double NUDGE = 2;
+  private static double TEXT_HEIGHT = 18;
 
   private static String WHITE_KEY_COLOR = "#eaeaec";
   private static String BLACK_KEY_COLOR = "#0a0a0c";
@@ -41,14 +47,16 @@ public class Piano {
   private static String BLACK_KEY_PRESSED_COLOR = WHITE_KEY_PRESSED_COLOR;
   // private static String BLACK_KEY_PRESSED_COLOR = "#8a0a0c";
 
-  private static String PIANO_BACKGROUND = "#0a0a0c";
+  private static String PIANO_BACKGROUND = "#252525";
+
+  private static String TEXT_COLOR = "#aaaaacee";
 
   static double width(int octaves) {
     return PADDING + (octaves * 7) * (WHITE_KEY_WIDTH + MARGIN) + PADDING - MARGIN;
   }
 
   static double height() {
-    return PADDING + WHITE_KEY_HEIGHT + PADDING;
+    return PADDING + WHITE_KEY_HEIGHT + MARGIN + TEXT_HEIGHT + PADDING;
   }
 
   private static double whiteKeyX(int key) {
@@ -88,9 +96,21 @@ public class Piano {
   private Canvas canvas;
   private double width;
   private double height;
+  private int octaves;
 
   public Canvas getCanvas() {
     return this.canvas;
+  }
+
+  private void drawLabels(GraphicsContext ctx) {
+    ctx.setFill(Color.valueOf(TEXT_COLOR));
+    ctx.setStroke(Color.valueOf(TEXT_COLOR));
+    ctx.setFontSmoothingType(FontSmoothingType.LCD);
+    ctx.setFont(Font.font("Helvetica", FontWeight.NORMAL, FontPosture.REGULAR, 18));
+    for (var i = 0; i < this.octaves; ++i) {
+      ctx.fillText(MIDIUtil.fromMidi(this.keys[0].midiCode + i * 12), whiteKeyX(i * 7),
+          PADDING + MARGIN + WHITE_KEY_HEIGHT + MARGIN + TEXT_HEIGHT);
+    }
   }
 
   public void draw() {
@@ -120,6 +140,8 @@ public class Piano {
         ctx.fillRect(key.x + MARGIN, key.y, BLACK_KEY_WIDTH - MARGIN * 2, BLACK_KEY_HEIGHT - MARGIN);
       }
     }
+
+    this.drawLabels(ctx);
   }
 
   private Key collision(double x, double y) {
@@ -164,6 +186,7 @@ public class Piano {
     this.width = _width;
     this.height = _height;
     this.canvas = new Canvas(_width, _height);
+    this.octaves = _octaves;
     var startingNote = MIDIUtil.toMIDI("C1");
     for (int i = 0; i < _octaves; ++i) {
       for (int j = 0; j < 5; ++j) {

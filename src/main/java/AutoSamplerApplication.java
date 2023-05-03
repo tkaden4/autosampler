@@ -212,7 +212,7 @@ public class AutoSamplerApplication extends Application {
     // Piano
     this.piano = new Piano(width, pianoHeight, 7);
     this.piano.draw();
-    var box = new VBox(this.piano.getCanvas(), utils);
+    var box = new VBox(this.piano.getCanvas(), new Separator(Orientation.HORIZONTAL), utils);
     box.getStyleClass().add(JMetroStyleClass.BACKGROUND);
 
     updatePianoState();
