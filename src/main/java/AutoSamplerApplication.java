@@ -46,6 +46,8 @@ public class AutoSamplerApplication extends Application {
   private TextField endingNoteField = new TextField("C6");
   private TextField intervalField = new TextField("6");
 
+  private static String VERSION = "0.0.1";
+
   static void run(String[] args) {
     launch(args);
   }
@@ -74,7 +76,7 @@ public class AutoSamplerApplication extends Application {
 
   @Override
   public void start(Stage primaryStage) throws Exception {
-    primaryStage.setTitle("Auto Sampler v0");
+    primaryStage.setTitle("Auto Sampler " + VERSION);
     primaryStage.getIcons()
         .add(new Image(AutoSamplerApplication.class.getResourceAsStream("/icon128.png")));
 
