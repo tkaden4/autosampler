@@ -55,12 +55,13 @@ public class Sampler {
         super(arg0);
       }
 
+      private boolean shouldStartChecking = false;
       private byte[] checkBuffer = new byte[4096];
       private int checkBufferPos = 0;
       private int checkBufferBytesRead = 0;
 
       public int read() throws java.io.IOException {
-        throw new IOException("Invalid");
+        return this.shouldStartChecking ? -1 : super.read();
       }
 
       public int read(byte[] arg0) throws java.io.IOException {
@@ -74,6 +75,8 @@ public class Sampler {
       }
 
       private int fillCheckBuffer(byte[] data, int r) {
+        if (!shouldStartChecking)
+          return r;
         var endPosition = checkBufferPos;
         for (; endPosition < checkBuffer.length; ++endPosition) {
           if (endPosition - checkBufferPos < data.length) {
@@ -96,6 +99,10 @@ public class Sampler {
         }
 
         return r;
+      }
+
+      public synchronized void waitForFinish() {
+        this.shouldStartChecking = true;
       }
     }
 
@@ -127,6 +134,7 @@ public class Sampler {
     midiDevice.close();
 
     System.out.println("Waiting for the sound to finish");
+    inputStream.waitForFinish();
 
     thread.join();
     line.stop();
