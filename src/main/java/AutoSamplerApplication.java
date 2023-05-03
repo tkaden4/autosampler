@@ -35,7 +35,6 @@ public class AutoSamplerApplication extends Application {
   private ChoiceBox<Mixer.Info> audioDeviceChoice;
   private ChoiceBox<MidiDevice.Info> midiDeviceChoice;
   private File outputDirectory = Util.cwd().resolve("samples").toFile();
-  private Text estimateText;
   private Piano piano;
   private TextField sampleLengthField;
   private TextField noteHoldLengthField;
@@ -72,20 +71,6 @@ public class AutoSamplerApplication extends Application {
   private void updateIOState() {
     this.openDirectoryButton.setDisable(!this.outputDirectory.exists());
     this.directoryChooserTextField.setText(this.outputDirectory.getPath().toString());
-  }
-
-  private void updateEstimate() {
-    var options = this.getOptionsFromState(true);
-    if (options != null) {
-      if (options.interval <= 0) {
-        return;
-      }
-      var distance = options.endNote - options.startNote;
-      var extra = distance % options.interval;
-      var totalNotes = extra > 0 ? (distance / options.interval + 2) : (distance / options.interval + 1);
-      this.estimateText.setText(
-          Util.formatDuration(Duration.ofMillis(options.sampleLength * totalNotes)));
-    }
   }
 
   private void updatePianoState() {
@@ -154,8 +139,6 @@ public class AutoSamplerApplication extends Application {
     // Start button + progress
     var sampleButton = new Button("Start Sampling");
     var progress = new ProgressBar(0);
-    this.estimateText = new Text();
-    updateEstimate();
 
     sampleButton.setOnAction(_e -> {
       progress.setProgress(0);
@@ -204,13 +187,6 @@ public class AutoSamplerApplication extends Application {
     this.noteHoldLengthField = new TextField("1000");
     this.sampleLengthField = new TextField("1000");
 
-    ChangeListener<String> timeParamsChange = (observable, old, newValue) -> {
-      updateEstimate();
-    };
-
-    this.noteHoldLengthField.textProperty().addListener(timeParamsChange);
-    this.sampleLengthField.textProperty().addListener(timeParamsChange);
-
     var sustainLabel = new Label("Note Sustain");
     var sampleLengthLabel = new Label("Sample Length");
 
@@ -221,7 +197,6 @@ public class AutoSamplerApplication extends Application {
 
     ChangeListener<String> pianoParamsChange = (observable, old, newValue) -> {
       updatePianoState();
-      updateEstimate();
     };
 
     this.startingNoteField.setMaxWidth(60);
@@ -239,7 +214,7 @@ public class AutoSamplerApplication extends Application {
         new Separator(Orientation.VERTICAL),
         sustainLabel, this.noteHoldLengthField, sampleLengthLabel, this.sampleLengthField,
         new Separator(Orientation.VERTICAL),
-        sampleButton, estimateText);
+        sampleButton);
     controlsBox.setAlignment(Pos.CENTER_LEFT);
 
     //
