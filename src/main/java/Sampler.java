@@ -7,9 +7,9 @@ import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-
 import javax.sound.midi.MidiDevice;
 import javax.sound.sampled.Mixer;
+import javax.sound.sampled.TargetDataLine;
 
 public class Sampler {
 
@@ -49,8 +49,57 @@ public class Sampler {
       throw new IOException("Unable to open the necessary devices");
     }
 
-    var inputStream = new AudioInputStream(line);
+    class Wrapper extends AudioInputStream {
 
+      public Wrapper(TargetDataLine arg0) {
+        super(arg0);
+      }
+
+      private byte[] checkBuffer = new byte[4096];
+      private int checkBufferPos = 0;
+      private int checkBufferBytesRead = 0;
+
+      public int read() throws java.io.IOException {
+        throw new IOException("Invalid");
+      }
+
+      public int read(byte[] arg0) throws java.io.IOException {
+        var r = super.read(arg0);
+        return r > 0 ? this.fillCheckBuffer(arg0, r) : r;
+      }
+
+      public int read(byte[] arg0, int arg1, int arg2) throws java.io.IOException {
+        var r = super.read(arg0, arg1, arg2);
+        return r > 0 ? this.fillCheckBuffer(arg0, r) : r;
+      }
+
+      private int fillCheckBuffer(byte[] data, int r) {
+        var endPosition = checkBufferPos;
+        for (; endPosition < checkBuffer.length; ++endPosition) {
+          if (endPosition - checkBufferPos < data.length) {
+            this.checkBuffer[endPosition] = data[endPosition - checkBufferPos];
+            ++this.checkBufferBytesRead;
+          } else {
+            break;
+          }
+        }
+
+        this.checkBufferPos = endPosition % this.checkBuffer.length;
+
+        var checkSum = 0;
+        if (this.checkBufferBytesRead > this.checkBuffer.length) {
+          for (var b : this.checkBuffer) {
+            checkSum += Math.abs(b);
+          }
+          var utilization = (((float) checkSum) / (0.707 * 128 * this.checkBuffer.length));
+          return utilization > 0.01 ? r : -1;
+        }
+
+        return r;
+      }
+    }
+
+    var inputStream = new Wrapper(line);
     // We have to record on a separate thread
     var thread = new Thread(() -> {
       try {
@@ -77,9 +126,10 @@ public class Sampler {
 
     midiDevice.close();
 
+    System.out.println("Waiting for the sound to finish");
+
+    thread.join();
     line.stop();
     line.close();
-    thread.interrupt();
-    thread.join();
   }
 }

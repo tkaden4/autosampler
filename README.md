@@ -17,6 +17,6 @@ gradle fatJar
 ## TODO
 ```
 - Input Gain Adjustment
-- Sample length determined by zero crossing
 - Generate DecentSampler metadata
+- Add cancel feature
 ```

@@ -44,8 +44,7 @@ public class Piano {
   private static String BLACK_KEY_COLOR = "#0a0a0c";
 
   private static String WHITE_KEY_PRESSED_COLOR = "#facacc";
-  private static String BLACK_KEY_PRESSED_COLOR = WHITE_KEY_PRESSED_COLOR;
-  // private static String BLACK_KEY_PRESSED_COLOR = "#8a0a0c";
+  private static String BLACK_KEY_PRESSED_COLOR = "#ba8a8c";
 
   private static String PIANO_BACKGROUND = "#252525";
 

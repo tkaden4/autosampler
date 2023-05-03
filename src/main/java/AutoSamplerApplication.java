@@ -37,8 +37,8 @@ public class AutoSamplerApplication extends Application {
   private File outputDirectory = Util.cwd().resolve("samples").toFile();
   private Text estimateText;
   private Piano piano;
-  private TextField sampleLengthField = new TextField("2000");
-  private TextField noteHoldLengthField = new TextField("1000");
+  private TextField sampleLengthField;
+  private TextField noteHoldLengthField;
   private Button openDirectoryButton;
   private TextField directoryChooserTextField;
 
@@ -160,6 +160,12 @@ public class AutoSamplerApplication extends Application {
     sampleButton.setOnAction(_e -> {
       progress.setProgress(0);
 
+      String[] entries = this.outputDirectory.list();
+      for (String s : entries) {
+        File currentFile = new File(this.outputDirectory.getPath(), s);
+        currentFile.delete();
+      }
+      this.outputDirectory.delete();
       this.outputDirectory.mkdirs();
       System.out.println(this.outputDirectory.toPath().toString());
       System.out.println("Starting sampling");
@@ -175,10 +181,12 @@ public class AutoSamplerApplication extends Application {
           });
         } catch (Exception e) {
           Platform.runLater(() -> {
+            e.printStackTrace();
           });
         }
         Platform.runLater(() -> {
           sampleButton.setDisable(false);
+          System.out.println("Finished");
           updateIOState();
         });
       });
@@ -194,7 +202,7 @@ public class AutoSamplerApplication extends Application {
 
     // Timing options and start
     this.noteHoldLengthField = new TextField("1000");
-    this.sampleLengthField = new TextField("2000");
+    this.sampleLengthField = new TextField("1000");
 
     ChangeListener<String> timeParamsChange = (observable, old, newValue) -> {
       updateEstimate();
