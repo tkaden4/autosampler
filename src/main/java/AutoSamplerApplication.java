@@ -9,6 +9,7 @@ import javax.sound.sampled.Mixer;
 import jfxtras.styles.jmetro.*;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -36,6 +37,7 @@ public class AutoSamplerApplication extends Application {
   private ChoiceBox<MidiDevice.Info> midiDeviceChoice;
   private File outputDirectory = Util.cwd().resolve("samples").toFile();
   private Text resultText;
+  private Text estimateText;
   private Piano piano;
   private TextField sampleLengthField = new TextField("2000");
   private TextField noteHoldLengthField = new TextField("1000");
@@ -52,14 +54,21 @@ public class AutoSamplerApplication extends Application {
     launch(args);
   }
 
-  private AutoSampler.Options getOptionsFromState() {
-    return new AutoSampler.Options(MIDIUtil.toMIDI(this.startingNoteField.getText()),
-        MIDIUtil.toMIDI(this.endingNoteField.getText()),
-        Integer.parseInt(this.intervalField.getText()),
-        Integer.parseInt(this.sampleLengthField.getText()),
-        Integer.parseInt(this.noteHoldLengthField.getText()), this.outputDirectory.toPath(),
-        (note, velocity) -> "sample_" + note + "_" + velocity + ".wav", this.audioDeviceChoice.getValue(),
-        this.midiDeviceChoice.getValue());
+  private AutoSampler.Options getOptionsFromState(boolean optional) {
+    try {
+      return new AutoSampler.Options(MIDIUtil.toMIDI(this.startingNoteField.getText()),
+          MIDIUtil.toMIDI(this.endingNoteField.getText()),
+          Integer.parseInt(this.intervalField.getText()),
+          Integer.parseInt(this.sampleLengthField.getText()),
+          Integer.parseInt(this.noteHoldLengthField.getText()), this.outputDirectory.toPath(),
+          (note, velocity) -> "sample_" + note + "_" + velocity + ".wav", this.audioDeviceChoice.getValue(),
+          this.midiDeviceChoice.getValue());
+    } catch (Exception e) {
+      if (optional) {
+        return null;
+      }
+      throw e;
+    }
   }
 
   private void updateIOState() {
@@ -67,10 +76,25 @@ public class AutoSamplerApplication extends Application {
     this.directoryChooserTextField.setText(this.outputDirectory.getPath().toString());
   }
 
+  private void updateEstimate() {
+    var options = this.getOptionsFromState(true);
+    if (options != null) {
+      var distance = options.endNote - options.startNote;
+      var extra = distance % options.interval;
+      var totalNotes = extra > 0 ? (distance / options.interval + 2) : (distance / options.interval + 1);
+      this.estimateText.setText(
+          Util.formatDuration(Duration.ofMillis(options.sampleLength * totalNotes)));
+    }
+  }
+
   private void updatePianoState() {
-    var options = this.getOptionsFromState();
-    for (var code = options.startNote; code <= options.endNote; code += options.interval) {
-      this.piano.highlight(code);
+    var options = this.getOptionsFromState(true);
+    if (options != null) {
+      this.piano.clear();
+      for (var code = options.startNote; code <= options.endNote; code += options.interval) {
+        this.piano.highlight(code);
+      }
+      this.piano.highlight(options.endNote);
     }
   }
 
@@ -128,9 +152,8 @@ public class AutoSamplerApplication extends Application {
     this.resultText = outputText;
     var sampleButton = new Button("Start Sampling");
     var progress = new ProgressBar(0);
-    var options = this.getOptionsFromState();
-    var estimateText = new Text(
-        Util.formatDuration(Duration.ofMillis(options.sampleLength * (options.endNote - options.startNote + 1))));
+    this.estimateText = new Text();
+    updateEstimate();
 
     sampleButton.setOnAction(_e -> {
       this.resultText.setText("");
@@ -144,7 +167,7 @@ public class AutoSamplerApplication extends Application {
       var self = this;
       var task = new Thread(() -> {
         try {
-          AutoSampler.sample(getOptionsFromState(), (note, velocity, current, total) -> {
+          AutoSampler.sample(getOptionsFromState(false), (note, velocity, current, total) -> {
             final double currentProgress = ((double) current) / ((double) total);
             Platform.runLater(() -> {
               System.out.printf("%d %d %d/%d\n", note, velocity, current, total);
@@ -175,6 +198,13 @@ public class AutoSamplerApplication extends Application {
     this.noteHoldLengthField = new TextField("1000");
     this.sampleLengthField = new TextField("2000");
 
+    ChangeListener<String> timeParamsChange = (observable, old, newValue) -> {
+      updateEstimate();
+    };
+
+    this.noteHoldLengthField.textProperty().addListener(timeParamsChange);
+    this.sampleLengthField.textProperty().addListener(timeParamsChange);
+
     var sustainLabel = new Label("Note Sustain");
     var sampleLengthLabel = new Label("Sample Length");
 
@@ -183,11 +213,20 @@ public class AutoSamplerApplication extends Application {
 
     var intervalLabel = new Label("Interval");
 
+    ChangeListener<String> pianoParamsChange = (observable, old, newValue) -> {
+      updatePianoState();
+      updateEstimate();
+    };
+
     this.startingNoteField.setMaxWidth(60);
     this.endingNoteField.setMaxWidth(60);
     this.intervalField.setMaxWidth(60);
     this.noteHoldLengthField.setMaxWidth(60);
     this.sampleLengthField.setMaxWidth(60);
+
+    this.intervalField.textProperty().addListener(pianoParamsChange);
+    this.endingNoteField.textProperty().addListener(pianoParamsChange);
+    this.startingNoteField.textProperty().addListener(pianoParamsChange);
 
     var controlsBox = new HBox(5, startingNoteLabel, this.startingNoteField, endingNoteLabel, this.endingNoteField,
         intervalLabel, this.intervalField,
